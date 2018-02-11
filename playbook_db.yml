@@ -1,0 +1,25 @@
+---
+- hosts: w2db
+  vars:
+  connection: local
+  become: yes
+  become_user: root
+  tasks:
+  - name: install lvm2
+    yum: name=lvm2 state=latest
+  - name: Install device-mapper
+    yum: name=device-mapper state=latest
+  - name: Install device-mapper-pesistent-data
+    yum: name=device-mapper-persistent-data state=latest
+  - name: add docker repo
+    yum_repository: name=docker-ce-stable description=repo_docker baseurl=http://download.docker.com/linux/centos/7/$basearch/stable gpgkey=http://download.docker.com/linux/centos/gpg gpgcheck=yes
+  - name: Install Docker
+    yum: name=docker-ce state=latest
+  - name: install vim
+    yum: name=vim state=latest
+  - name: restart docker
+    service: name=docker state=restarted
+  - name: create docker volume Mysql
+    command: docker  run -v /var/lib/mysql --name=db_datastore -d busybox
+  - name: run mysql container
+    command: docker run --name mysql_db -p 3306:3306 -e MYSQL_ROOT_PASSWORD=my-secret-pw --volumes-from db_datastore --restart=always -d mariadb
